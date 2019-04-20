@@ -13,4 +13,4 @@ conv = { path = "../conv" }
 logger = { path = "../logger" }
 settings = { path = "../settings" }
 file_system = { path = "../file_system" }
-zlib_wrapper = { path = "../zlib_wrapper" }
+flate2 = "1"

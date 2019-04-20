@@ -1,5 +1,4 @@
 
-use zlib_wrapper;
 use file_system;
 
 use GROUP_BLOKS_FLAG;
@@ -214,7 +213,7 @@ impl Block {
         }
 
         if !data.is_empty() && BlockType::FromCf.ne(&self.block_type.borrow()) {
-            data = zlib_wrapper::compress(&data);
+            data = zlib::compress(&data);
         }
 
         return (self.attrs.for_cf(), data);
@@ -274,7 +273,7 @@ impl Block {
 
         let mut block_data: Vec<u8> = Vec::new();
         if !self.source_data.borrow().is_empty() {
-            let mut decompress_data = zlib_wrapper::decompress(&self.source_data.borrow());
+            let mut decompress_data = zlib::decompress(&self.source_data.borrow());
             block_data.append(&mut decompress_data);
         }
 
@@ -385,6 +384,29 @@ fn get_attr(source_data: &Vec<u8>, header: &Header) -> Attributes {
     return Attributes::from_cf(attrs_data);
 }
 
+mod zlib {
+    use std::io::prelude::*;
+
+    use flate2::read::DeflateDecoder;
+    use flate2::write::DeflateEncoder;
+    use flate2::Compression;
+
+    pub fn compress(data:&[u8]) -> Vec<u8> {
+        let mut e = DeflateEncoder::new(Vec::new(), Compression::default());
+        e.write_all(data).expect("cannot deflate");
+        
+        e.finish().expect("cannot finish deflate")
+    }
+
+    pub fn decompress(bytes:&[u8]) -> Vec<u8> {
+        let mut z = DeflateDecoder::new(bytes);
+        let mut buf = Vec::new();
+        z.read_to_end(&mut buf).expect("cannot inflate data");
+        
+        buf
+    }
+}
+
 #[test]
 fn test_simple_block_from_cf() {
 
@@ -425,7 +447,6 @@ fn test_simple_block_from_cf() {
 
 #[test]
 fn test_multi_block_from_cf() {
-    use zlib_wrapper;
 
     let mut attrs: Vec<u8> = Vec::new();
     attrs.extend_from_slice(&[0xB0, 0x14, 0xC1, 0x30, 0x23, 0x42, 0x02, 0x00]);
@@ -457,7 +478,7 @@ fn test_multi_block_from_cf() {
 
     data_multi_block.extend_from_slice(&block_data);
     data_multi_block.extend_from_slice(&block_data);
-    data_multi_block = zlib_wrapper::compress(&data_multi_block);
+    data_multi_block = zlib::compress(&data_multi_block);
 
     let data_multi_block_header = Header::for_cf(data_multi_block.len());
 

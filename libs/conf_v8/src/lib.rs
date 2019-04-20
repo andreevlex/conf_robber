@@ -10,7 +10,7 @@ extern crate lazy_static;
 extern crate conv;
 extern crate settings;
 extern crate file_system;
-extern crate zlib_wrapper;
+extern crate flate2;
 
 #[macro_use]
 mod meta_data;
